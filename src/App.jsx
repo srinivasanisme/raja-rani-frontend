@@ -16,6 +16,10 @@ export default function RajaRaniGame() {
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
+    // ✅ Add this for debugging connection
+   socket.on("connect", () => console.log("✅ Connected to backend"));
+   socket.on("connect_error", (err) => console.log("❌ Connection error:", err));
+   
     // Receive general game state
     socket.on("state", (s) => {
       setPlayers(s.players || []);
