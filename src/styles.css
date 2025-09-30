@@ -1,0 +1,126 @@
+body {
+  font-family: "Segoe UI", sans-serif;
+  background: #f0f2f5;
+  margin: 0;
+  padding: 0;
+}
+
+.game-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  text-align: center;
+  padding: 20px;
+}
+
+.timer {
+  font-size: 24px;
+  margin-bottom: 20px;
+  animation: pulse 1s infinite;
+}
+
+.players-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 15px;
+}
+
+.player-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 15px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.3s;
+}
+
+.player-card.active {
+  border: 2px solid #007bff;
+  animation: activePulse 1s infinite;
+}
+
+.player-card:hover {
+  transform: scale(1.05);
+}
+
+.celebratePulse {
+  animation: celebratePulse 1s ease-in-out;
+}
+
+@keyframes celebratePulse {
+  0% { transform: scale(1); background: #fff; }
+  50% { transform: scale(1.2); background: #ffe066; }
+  100% { transform: scale(1); background: #fff; }
+}
+
+.swapAnim {
+  animation: swapAnim 0.8s ease-in-out;
+}
+
+@keyframes swapAnim {
+  0% { transform: rotate(0deg) translateX(0); }
+  50% { transform: rotate(10deg) translateX(20px); }
+  100% { transform: rotate(0deg) translateX(0); }
+}
+
+.caughtFlash {
+  animation: caughtFlash 0.8s;
+}
+
+@keyframes caughtFlash {
+  0% { background: #fff; }
+  50% { background: #ff4d4f; }
+  100% { background: #fff; }
+}
+
+.modal {
+  position: fixed;
+  top: 20%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #fff;
+  padding: 30px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  z-index: 100;
+}
+
+.animate-fadeIn {
+  animation: fadeIn 1s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% { opacity: 0; transform: translateY(-20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+.top-player {
+  font-size: 20px;
+  margin: 5px 0;
+}
+
+.top-1 { color: gold; }
+.top-2 { color: silver; }
+.top-3 { color: #cd7f32; }
+
+.fireworks {
+  font-size: 50px;
+  margin-top: 20px;
+  animation: fireworksAnim 2s infinite;
+}
+
+@keyframes fireworksAnim {
+  0% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.5); opacity: 0.8; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+@keyframes activePulse {
+  0%, 100% { box-shadow: 0 0 10px #007bff; }
+  50% { box-shadow: 0 0 25px #007bff; }
+}

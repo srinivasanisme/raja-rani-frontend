@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">CatchMeIfUCan</string>
+    <string name="title_activity_main">CatchMeIfUCan</string>
+    <string name="package_name">com.catchmeifucan.game</string>
+    <string name="custom_url_scheme">com.catchmeifucan.game</string>
+</resources>
