@@ -1,8 +1,10 @@
 // src/RajaRaniGame.jsx
-import React, { useEffect, useState } from "react";
-import socket from "./socket";
+import { useContext, useEffect, useState } from "react";
+import { SocketContext } from "./SocketContext.jsx";
+import { useBlinkingEmoji } from "./utils/uniqueEmoji.js";
 
 export default function RajaRaniGame({ onExit }) {
+  const { socket, connected: socketConnected } = useContext(SocketContext);
   const [myName, setMyName] = useState("");
   const [added, setAdded] = useState(false);
   const [players, setPlayers] = useState([]);
@@ -16,52 +18,87 @@ export default function RajaRaniGame({ onExit }) {
   const [summary, setSummary] = useState(null);
 
   useEffect(() => {
-    // ✅ Add this for debugging connection
-   socket.on("connect", () => console.log("✅ Connected to backend"));
-   socket.on("connect_error", (err) => console.log("❌ Connection error:", err));
-   
-    // Receive general game state
-    socket.on("state", (s) => {
-      setPlayers(s.players || []);
-      setRolesPublic(s.rolesPublic || {});
-      setActivePlayer(s.activePlayer || null);
-      setHistory(s.history || []);
-      setRound(s.round || 0);
-      setRoundActive(!!s.roundActive);
+   if (!socket) return;
 
-      if (added) {
-        socket.emit("requestRole", myName); // request private role every state update
-      }
-    });
+    const onConnect = () => {
+      console.log("✅ Connected to backend", socket.id);
+      setSocketConnected(true);
+    };
+    const onConnectError = (err) => {
+      console.error("❌ Connection error:", err);
+      setSocketConnected(false);
+    };
 
-    socket.on("yourRole", ({ role }) => setMyRole(role));
-
-    socket.on("roundSummary", ({ round: r, summary }) => {
-      setSummary({ round: r, summary });
-    });
-
-    socket.on("errorMsg", (msg) => {
-      setError(msg);
-      setTimeout(() => setError(""), 3500);
-    });
+    socket.on("connect", onConnect);
+    socket.on("connect_error", onConnectError);
 
     return () => {
-      socket.off("state");
-      socket.off("yourRole");
-      socket.off("roundSummary");
-      socket.off("errorMsg");
+      socket.off("connect", onConnect);
+      socket.off("connect_error", onConnectError);
     };
-  }, [added, myName]);
+  }, []);
+   
+ useEffect(() => {
+    if (!socket) return;
 
-  const addMe = () => {
-    const name = myName.trim();
-    if (!name) return setError("Enter a valid name");
+  const handleState = (s) => {
+    setPlayers(s.players || []);
+    setRolesPublic(s.rolesPublic || {});
+    setActivePlayer(s.activePlayer || null);
+    setHistory(s.history || []);
+    setRound(s.round || 0);
+    setRoundActive(!!s.roundActive);
 
-    socket.emit("addPlayer", name, (res) => {
-      if (res?.success) setAdded(true);
-      else setError(res?.error || "Failed to add");
-    });
+    if (added) {
+      socket.emit("requestRole", myName);
+    }
   };
+
+  const handleYourRole = ({ role }) => setMyRole(role);
+  const handleRoundSummary = ({ round: r, summary }) => setSummary({ round: r, summary });
+  const handleErrorMsg = (msg) => {
+    setError(msg);
+    setTimeout(() => setError(""), 3500);
+  };
+
+  socket.on("state", handleState);
+  socket.on("yourRole", handleYourRole);
+  socket.on("roundSummary", handleRoundSummary);
+  socket.on("errorMsg", handleErrorMsg);
+
+  return () => {
+    socket.off("state", handleState);
+    socket.off("yourRole", handleYourRole);
+    socket.off("roundSummary", handleRoundSummary);
+    socket.off("errorMsg", handleErrorMsg);
+  };
+}, [added, myName]);
+
+  useBlinkingEmoji(
+  myName,
+  activePlayer?.name === myName
+    ? "yourTurn"
+    : activePlayer
+    ? "othersTurn"
+    : "waiting"
+);
+  const addMe = () => {
+  const name = myName.trim();
+  if (!name) return setError("Enter a valid name");
+
+  if (!socket.connected) {
+    return setError("Socket not connected yet. Try again in a moment.");
+  }
+
+  socket.emit("addPlayer", name, (res) => {
+    if (res?.success) {
+      setAdded(true);
+      setError(""); // clear any previous error
+    } else {
+      setError(res?.error || "Failed to add");
+    }
+  });
+};
 
   const startRound = () => {
     socket.emit("startRound", (res) => {
@@ -112,13 +149,18 @@ export default function RajaRaniGame({ onExit }) {
 
       {!added ? (
         <div style={{ marginBottom: 12 }}>
-          <input
-            placeholder="Enter your name"
-            value={myName}
-            onChange={(e) => setMyName(e.target.value)}
-          />
-          <button onClick={addMe} style={{ marginLeft: 8 }}>Join Game</button>
-        </div>
+        <input
+          placeholder="Enter your name"
+          value={myName}
+          onChange={(e) => setMyName(e.target.value)}
+         />
+        <button
+          onClick={addMe}
+          disabled={added || !myName.trim() || !socketConnected}
+        >
+          {added ? "Joined" : socketConnected ? "Join Game" : "Connecting..."}
+        </button>
+      </div>
       ) : (
         <div style={{ marginBottom: 12 }}>
           <strong>Logged in as:</strong> {myName}
