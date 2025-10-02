@@ -16,63 +16,88 @@ export default function RajaRaniGame({ onExit }) {
   const [myRole, setMyRole] = useState(null);
   const [error, setError] = useState("");
   const [summary, setSummary] = useState(null);
+  const [latestFeedback, setLatestFeedback] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(null);
 
+   // ---------------- SOCKET EFFECT ----------------
   useEffect(() => {
-   if (!socket) return;
-
-    const onConnect = () => {
-      console.log("✅ Connected to backend", socket.id);
-      setSocketConnected(true);
-    };
-    const onConnectError = (err) => {
-      console.error("❌ Connection error:", err);
-      setSocketConnected(false);
-    };
-
-    socket.on("connect", onConnect);
-    socket.on("connect_error", onConnectError);
-
-    return () => {
-      socket.off("connect", onConnect);
-      socket.off("connect_error", onConnectError);
-    };
-  }, []);
-   
- useEffect(() => {
     if (!socket) return;
 
-  const handleState = (s) => {
-    setPlayers(s.players || []);
-    setRolesPublic(s.rolesPublic || {});
-    setActivePlayer(s.activePlayer || null);
-    setHistory(s.history || []);
-    setRound(s.round || 0);
-    setRoundActive(!!s.roundActive);
+    // Handle main game state
+    const handleState = (s) => {
+      setPlayers(s.players || []);
+      setRolesPublic(s.rolesPublic || {});
+      setActivePlayer(s.activePlayer || null);
+      setHistory(s.history || []);
+      setRound(s.round || 0);
+      setRoundActive(!!s.roundActive);
 
-    if (added) {
-      socket.emit("requestRole", myName);
+      if (added) socket.emit("requestRole", myName);
+    };
+
+    // Handle private role
+    const handleYourRole = ({ role }) => setMyRole(role);
+
+    // Round summary
+    const handleRoundSummary = ({ round: r, summary }) => {
+      setSummary({ round: r, summary });
+      setTimeLeft(null);
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    };
+    const handleTimerUpdate = (time) => {
+    console.log("⏳ Timer:", time);
+    setTimeLeft(time);
+    };
+    // Error messages
+    const handleErrorMsg = (msg) => {
+      setError(msg);
+      setTimeout(() => setError(""), 3500);
+    };
+
+    // ---------------- TIMER START ----------------
+    const handleTimerStart = ({ timeLeft }) => {
+      setTimeLeft(timeLeft);
+
+      // Clear existing interval
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+
+      // Start local countdown
+      timerIntervalRef.current = setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            clearInterval(timerIntervalRef.current);
+            timerIntervalRef.current = null;
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    };
+
+    // ---------------- SOCKET LISTENERS ----------------
+    socket.on("state", handleState);
+    socket.on("yourRole", handleYourRole);
+    socket.on("roundSummary", handleRoundSummary);
+    socket.on("timerStart", handleTimerStart);
+    socket.on("timerUpdate", handleTimerUpdate);
+    socket.on("errorMsg", handleErrorMsg);
+
+    return () => {
+      socket.off("state", handleState);
+      socket.off("yourRole", handleYourRole);
+      socket.off("roundSummary", handleRoundSummary);
+      socket.off("timerStart", handleTimerStart);
+       socket.off("timerUpdate", handleTimerUpdate);
+      socket.off("errorMsg", handleErrorMsg);
+    };
+  }, [socket, added, myName]);
+
+    useEffect(() => {
+      if (history.length > 0) {
+      setLatestFeedback(history[history.length - 1]);
     }
-  };
-
-  const handleYourRole = ({ role }) => setMyRole(role);
-  const handleRoundSummary = ({ round: r, summary }) => setSummary({ round: r, summary });
-  const handleErrorMsg = (msg) => {
-    setError(msg);
-    setTimeout(() => setError(""), 3500);
-  };
-
-  socket.on("state", handleState);
-  socket.on("yourRole", handleYourRole);
-  socket.on("roundSummary", handleRoundSummary);
-  socket.on("errorMsg", handleErrorMsg);
-
-  return () => {
-    socket.off("state", handleState);
-    socket.off("yourRole", handleYourRole);
-    socket.off("roundSummary", handleRoundSummary);
-    socket.off("errorMsg", handleErrorMsg);
-  };
-}, [added, myName]);
+  }, [history]);
 
   useBlinkingEmoji(
   myName,
@@ -158,9 +183,15 @@ export default function RajaRaniGame({ onExit }) {
           onClick={addMe}
           disabled={added || !myName.trim() || !socketConnected}
         >
-          {added ? "Joined" : socketConnected ? "Join Game" : "Connecting..."}
+          {added
+            ? "Joined"
+            : !socket
+            ? "Connecting..."
+            : !socketConnected
+            ? "Connecting..."
+            : "Join Game"}
         </button>
-      </div>
+       </div>
       ) : (
         <div style={{ marginBottom: 12 }}>
           <strong>Logged in as:</strong> {myName}
@@ -173,35 +204,69 @@ export default function RajaRaniGame({ onExit }) {
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <button
-          onClick={startRound}
-          disabled={!added || players.length !== 10 || roundActive}
-        >
-          Start Round
-        </button>
-        <button onClick={forceEnd} style={{ marginLeft: 8 }}>
-          Force End
-        </button>
-        {error && <span style={{ color: "red", marginLeft: 12 }}>{error}</span>}
-      </div>
+  <button
+    onClick={startRound}
+    disabled={!added || players.length !== 10 || roundActive}
+  >
+    Start Round
+  </button>
+  <button onClick={forceEnd} style={{ marginLeft: 8 }}>
+    Force End
+  </button>
+
+  {/* Latest feedback near buttons */}
+  {latestFeedback && (
+    <span
+      style={{
+        marginLeft: 12,
+        color:
+          latestFeedback.type === "error"
+            ? "red"
+            : latestFeedback.type === "success"
+            ? "green"
+            : "black",
+        fontWeight: "bold",
+      }}
+    >
+      {latestFeedback.text || latestFeedback}
+    </span>
+    )}
+
+     {/* fallback for legacy error */}
+     {error && !latestFeedback && (
+     <span style={{ color: "red", marginLeft: 12 }}>{error}</span>
+    )}
+    </div>
 
       <div style={{ border: "1px solid #ddd", padding: 12, marginBottom: 12 }}>
-        <div>
-          <strong>Round:</strong> {round} {roundActive ? "(active)" : "(waiting)"}
-        </div>
+      <div>
+      <strong>Round:</strong> {round} {roundActive ? "(active)" : "(waiting)"}
+      </div>
 
-        <div style={{ marginTop: 8 }}>
-          <strong>Public Player List:</strong>
-          <ol>
-            {players.map((p) => (
-              <li key={p.name}>
-                {p.name} —{" "}
-                {rolesPublic[p.name] || "?????"}{" "}
-                {p.inactive ? "✅ Done" : ""}
-              </li>
-            ))}
-          </ol>
-        </div>
+      {/* Timer display here */}
+      {timeLeft !== null && (
+      <div
+        style={{
+        fontWeight: "bold",
+        margin: "8px 0",
+        color: timeLeft <= 5 ? "red" : "black",
+      }}
+      >
+        ⏳ Time left: {timeLeft}s
+      </div>
+      )}
+
+      <div style={{ marginTop: 8 }}>
+      <strong>Public Player List:</strong>
+      <ol>
+      {players.map((p) => (
+          <li key={p.name}>
+          {p.name} — {rolesPublic[p.name] || "?????"}{" "}
+          {p.inactive ? "✅ Done" : ""}
+        </li>
+        ))}
+      </ol>
+    </div>
 
         <div style={{ marginTop: 8 }}>
           {activePlayer ? (
@@ -262,23 +327,27 @@ export default function RajaRaniGame({ onExit }) {
       </div>
 
       <div style={{ marginBottom: 12 }}>
-        <h3>History</h3>
-        <div
-          style={{
-            maxHeight: 200,
-            overflow: "auto",
-            background: "#fafafa",
-            padding: 8,
-            border: "1px solid #eee",
-          }}
-        >
-          {history.slice().reverse().map((h, i) => (
-            <div key={i} style={{ marginBottom: 6 }}>{h}</div>
-          ))}
-        </div>
-      </div>
+  <h3>History</h3>
 
-      {summary && (
+  {/* Full History Scrollable */}
+  <div
+    style={{
+      maxHeight: 200,
+      overflow: "auto",
+      background: "#fafafa",
+      padding: 8,
+      border: "1px solid #eee",
+    }}
+  >
+    {history.slice().reverse().map((h, i) => (
+      <div key={i} className={`new-log ${h.type || "neutral"}`}>
+        {h.text || h}
+      </div>
+    ))}
+  </div>
+</div>
+
+   {summary && (
         <div
           style={{
             position: "fixed",

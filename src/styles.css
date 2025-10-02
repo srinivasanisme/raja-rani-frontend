@@ -1,3 +1,4 @@
+/* --------------------------- Base Styles --------------------------- */
 body {
   font-family: "Segoe UI", sans-serif;
   background: #f0f2f5;
@@ -40,6 +41,20 @@ body {
 
 .player-card:hover {
   transform: scale(1.05);
+}
+
+/* Active player highlight in public list */
+.active-player {
+  background-color: #fef3c7;
+  box-shadow: 0 0 10px #ffd700;
+  border-radius: 8px;
+  font-weight: 600;
+  animation: activePlayerPulse 1.5s infinite;
+}
+
+@keyframes activePlayerPulse {
+  0%, 100% { box-shadow: 0 0 10px #ffd700; }
+  50% { box-shadow: 0 0 25px #ffd700; }
 }
 
 .celebratePulse {
@@ -123,4 +138,94 @@ body {
 @keyframes activePulse {
   0%, 100% { box-shadow: 0 0 10px #007bff; }
   50% { box-shadow: 0 0 25px #007bff; }
+}
+
+/* Blink gradient for optional rainbow */
+@keyframes blinkGradient {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* Catch button hover */
+.catch-btn {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  background: #f4f4f4;
+  cursor: pointer;
+  transition: all 0.3s ease-in-out;
+}
+.catch-btn:hover {
+  transform: scale(1.1);
+  background: linear-gradient(45deg, #ff0, #f0f, #0ff);
+  box-shadow: 0 0 10px #fff;
+}
+
+/* Round start overlay */
+.round-start-overlay {
+  position: fixed;
+  top: 40%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: rgba(0,0,0,0.7);
+  color: #fff;
+  font-size: 2rem;
+  padding: 20px 40px;
+  border-radius: 12px;
+  z-index: 9999;
+  animation: fadeInOut 2s ease-in-out forwards;
+}
+
+@keyframes fadeInOut {
+  0% { opacity: 0; transform: translate(-50%, -60%); }
+  50% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -40%); }
+}
+
+/* --------------------------- Live Feedback / History --------------------------- */
+.feedback {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 2px solid #ccc;
+  padding: 8px;
+  background: #fafafa;
+  margin-bottom: 12px;
+  text-align: left;
+}
+
+.feedback div {
+  margin-bottom: 6px;
+  padding: 4px 8px;
+  border-radius: 6px;
+}
+
+.feedback .correct {
+  color: #0a0;
+  font-weight: 600;
+}
+
+.feedback .wrong {
+  color: #d00;
+  font-weight: 600;
+}
+
+.feedback .neutral {
+  color: #333;
+}
+
+.feedback .roundEvent {
+  font-weight: bold;
+  color: #007bff;
+}
+
+/* Optional animation for new log flash */
+@keyframes logFlash {
+  0% { background: #fff; }
+  50% { background: #ffff99; }
+  100% { background: #fff; }
+}
+
+.feedback .new-log {
+  animation: logFlash 0.8s ease-in-out;
 }
