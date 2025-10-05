@@ -2,7 +2,7 @@
 import React, { createContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-// ✅ Your backend URL
+// ✅ Use your actual Render backend URL here
 const BACKEND_URL = "https://raja-rani-backend-cmbr.onrender.com";
 
 export const SocketContext = createContext({
@@ -15,23 +15,22 @@ export function SocketProvider({ children }) {
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    // ✅ Create socket with proper reconnection options
     const s = io(BACKEND_URL, {
-      transports: ["websocket"], // force WebSocket only
-      reconnection: true,        // auto reconnect if dropped
-      reconnectionAttempts: 10,  // retry up to 10 times
-      reconnectionDelay: 1000,   // wait 1s between attempts
+      transports: ["websocket"],
+      reconnection: true,
+      reconnectionAttempts: 20,
+      reconnectionDelay: 1000,
     });
 
     setSocket(s);
 
     s.on("connect", () => {
-      console.log("✅ Connected to backend", s.id);
+      console.log("✅ Connected to backend:", s.id);
       setConnected(true);
     });
 
     s.on("disconnect", (reason) => {
-      console.warn("⚠ Disconnected from backend:", reason);
+      console.warn("⚠ Disconnected:", reason);
       setConnected(false);
     });
 
@@ -41,14 +40,14 @@ export function SocketProvider({ children }) {
     });
 
     return () => {
-      console.log("🔌 Cleaning up socket connection");
+      console.log("🔌 Cleaning up socket");
       s.disconnect();
     };
   }, []);
 
   return (
-  <SocketContext.Provider value={{ socket, connected, setConnected }}>
-    {children}
-  </SocketContext.Provider>
-);
+    <SocketContext.Provider value={{ socket, connected }}>
+      {children}
+    </SocketContext.Provider>
+  );
 }
