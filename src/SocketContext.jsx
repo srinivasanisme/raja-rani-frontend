@@ -3,7 +3,7 @@ import React, { createContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
 // ✅ Use your actual Render backend URL here
-const BACKEND_URL = "https://raja-rani-backend-cmbr.onrender.com";
+const BACKEND_URL = "https://raja-rani-backend-cmbr.onrender.com"; 
 
 export const SocketContext = createContext({
   socket: null,

@@ -17,6 +17,7 @@ const roleEmojis = {
   THIEF: "🦹‍♂️",
 };
 
+
 export default function RajaRaniGame({ onExit }) {
   const { socket, connected: socketConnected } = useContext(SocketContext);
   const [myName, setMyName] = useState("");
@@ -511,6 +512,26 @@ useEffect(() => {
       ▶ Start Round
     </button>
   )}
+
+   <div className="p-4">
+    {/* 🧰 Admin Controls */}
+    {isAdmin && (
+      <div className="mb-4 flex justify-end">
+        <button
+          onClick={() => socket.emit("resetGame")}
+          className="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition"
+        >
+          🔄 Reset Game
+        </button>
+      </div>
+    )}
+
+    {/* 🎮 Rest of your game UI below */}
+    <div>
+      {/* Example: player grid, active player, timer, etc. */}
+      <PlayerGrid players={players} />
+    </div>
+  </div>
 
   {/* Force End */}
   {isAdmin && roundActive && (
