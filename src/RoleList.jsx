@@ -14,7 +14,7 @@ export default function RoleList() {
     { name: "MP->", points: 3500 },
     { name: "MLA->", points: 2000 },
     { name: "Police->", points: 1000 },
-    { name: "Thief->", points: 1000 },
+    { name: "Thief->", points: 0 },
   ];
 
   const getEmoji = (role) => {
