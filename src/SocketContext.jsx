@@ -2,45 +2,32 @@
 import React, { createContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-// ✅ Use your actual Render backend URL here
-const BACKEND_URL = "https://raja-rani-backend-cmbr.onrender.com"; 
+// CHANGE THIS URL to your online backend URL
+const BACKEND_URL = "https://raja-rani-backend-cmbr.onrender.com";
+export const SocketContext = createContext();
 
-export const SocketContext = createContext({
-  socket: null,
-  connected: false,
-});
-
-export function SocketProvider({ children }) {
+export const SocketProvider = ({ children }) => {
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
     const s = io(BACKEND_URL, {
       transports: ["websocket"],
-      reconnection: true,
-      reconnectionAttempts: 20,
-      reconnectionDelay: 1000,
     });
-
-    setSocket(s);
 
     s.on("connect", () => {
       console.log("✅ Connected to backend:", s.id);
       setConnected(true);
     });
 
-    s.on("disconnect", (reason) => {
-      console.warn("⚠ Disconnected:", reason);
+    s.on("disconnect", () => {
+      console.log("❌ Disconnected from backend");
       setConnected(false);
     });
 
-    s.on("connect_error", (err) => {
-      console.error("❌ Connection error:", err.message);
-      setConnected(false);
-    });
+    setSocket(s);
 
     return () => {
-      console.log("🔌 Cleaning up socket");
       s.disconnect();
     };
   }, []);
@@ -50,4 +37,4 @@ export function SocketProvider({ children }) {
       {children}
     </SocketContext.Provider>
   );
-}
+};
