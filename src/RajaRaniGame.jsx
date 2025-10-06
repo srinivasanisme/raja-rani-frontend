@@ -2,7 +2,9 @@
 import { useContext, useEffect, useState } from "react";
 import { SocketContext } from "./SocketContext.jsx";
 import { useBlinkingEmoji } from "./utils/uniqueEmoji.js";
+import RoleList from "./RoleList.jsx";
 import { useRef } from "react";
+import "./styles.css";
 
 export default function RajaRaniGame({ onExit }) {
   const { socket, connected: socketConnected } = useContext(SocketContext);
@@ -225,7 +227,7 @@ useEffect(() => {
  
 
   return (
-    <div
+   <div
   style={{
     padding: 16,
     maxWidth: 900,
@@ -233,42 +235,28 @@ useEffect(() => {
     fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
   }}
 >
-  {/* 🔙 Back button */}
-  <div style={{ marginBottom: 16 }}>
-    <button
-      onClick={() => {
-        if (window.confirm("Are you sure you want to exit the game?")) {
-          onExit();
-        }
-      }}
-      style={{
-        padding: "8px 14px",
-        borderRadius: "8px",
-        border: "none",
-        background: "linear-gradient(90deg, #f43f5e, #ec4899)",
-        color: "#fff",
-        fontWeight: "600",
-        cursor: "pointer",
-        boxShadow: "0 4px 12px rgba(236, 72, 153, 0.4)",
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) => {
-        e.currentTarget.style.transform = "scale(1.05)";
-        e.currentTarget.style.boxShadow = "0 6px 16px rgba(236,72,153,0.6)";
-      }}
-      onMouseLeave={(e) => {
-        e.currentTarget.style.transform = "scale(1)";
-        e.currentTarget.style.boxShadow = "0 4px 12px rgba(236,72,153,0.4)";
-      }}
-    >
-      ⬅ Back to Home
-    </button>
-  </div>
-<h1>🎭 Raja Rani Multiplayer (10 Roles)</h1>
+
+<div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 via-black to-gray-900 overflow-hidden">
+  {/* Main Game Title */}
+  <h1 className="relative text-7xl md:text-9xl font-extrabold text-center tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-red-500 to-pink-500 drop-shadow-[0_0_25px_rgba(255,255,255,0.8)] animate-pulse">
+                   🫣👀 CatchMe 🙋 IfUCan 🎭
+  </h1>
+
+  {/* Subtitle */}
+  <p className="mt-6 md:mt-8 text-yellow-300 text-2xl md:text-3xl font-bold uppercase text-center drop-shadow-[0_0_15px_rgba(255,255,150,0.9)] animate-pulse">
+    The Ultimate Hide & Seek Challenge
+  </p>
+
+  {/* Extra glowing effect */}
+  <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 opacity-10 animate-animate-glow pointer-events-none"></div>
+</div>
 
 
-    {/* 🎮 Join as Admin / Player */}
-{!added ? (
+
+
+
+   {/* 🎮 Join as Admin / Player */}
+{!added && (
   <div style={{ marginBottom: 16, textAlign: "center" }}>
     <input
       placeholder="Enter your name"
@@ -339,64 +327,81 @@ useEffect(() => {
       🎮 Join as Player
     </button>
   </div>
-) : (
-  <div style={{ marginBottom: 12, textAlign: "center", fontWeight: 600 }}>
-    <span>Socket connected: </span>
-    <span style={{ color: socketConnected ? "#22c55e" : "#ef4444" }}>
-      {socketConnected ? "✅ Yes" : "❌ No"}
-    </span>
-  </div>
 )}
 
 
-     <div
+<div
   style={{
     marginBottom: 16,
     padding: "12px 16px",
-    background: "#f9f9f9",
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-    border: "1px solid #e5e5e5",
+    background: "#0f172a",
+    borderRadius: "16px",
+    boxShadow: "0 4px 14px rgba(0,0,0,0.4)",
+    border: "1px solid #1e293b",
+    color: "#fff",
   }}
 >
-  <strong style={{ fontSize: "16px", marginBottom: "8px", display: "block" }}>
-    Players ({players.length}/10):
+  <strong
+    style={{
+      fontSize: "18px",
+      marginBottom: "10px",
+      display: "block",
+      letterSpacing: "1px",
+      textTransform: "uppercase",
+      color: "#38bdf8",
+    }}
+  >
+    💥 Players ({players.length}/10)
   </strong>
 
-  <ul style={{ listStyle: "none", padding: 0, margin: 0 }}>
+  <div
+    style={{
+      display: "flex",
+      flexWrap: "wrap",
+      gap: "10px",
+    }}
+  >
     {players.map((p) => {
       const isYou = p.name === myName;
       const isAdminPlayer = p.name === adminName;
+
+      let bg = "#334155";
+      let text = "#e2e8f0";
+      if (isAdminPlayer) {
+        bg = "linear-gradient(135deg, #f59e0b, #fbbf24)";
+        text = "#fff";
+      } else if (isYou) {
+        bg = "linear-gradient(135deg, #3b82f6, #06b6d4)";
+        text = "#fff";
+      }
+
       return (
-        <li
+        <div
           key={p.name}
           style={{
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
-            padding: "8px 12px",
-            marginBottom: "6px",
-            borderRadius: "10px",
-            background: isYou
-              ? "linear-gradient(90deg, #3b82f6, #06b6d4)"
-              : isAdminPlayer
-              ? "linear-gradient(90deg, #f59e0b, #fbbf24)"
-              : "#ffffff",
-            color: isYou || isAdminPlayer ? "#fff" : "#333",
+            gap: "6px",
+            padding: "8px 14px",
+            borderRadius: "999px",
+            background: bg,
+            color: text,
             fontWeight: isYou ? "700" : isAdminPlayer ? "600" : "500",
-            boxShadow:
-              isYou || isAdminPlayer ? "0 4px 10px rgba(0,0,0,0.15)" : "none",
-            transition: "all 0.2s ease",
+            boxShadow: "0 4px 10px rgba(0,0,0,0.25)",
+            transition: "transform 0.2s ease",
+            cursor: "default",
           }}
+          onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.05)")}
+          onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
         >
           <span>
-            {p.name} {isAdminPlayer && "🕹️"} {isYou && "(YOU)"}
+            {isAdminPlayer && "🥷"} {p.name} {isYou && "🫵"}
           </span>
-          {p.inactive && <span style={{ fontWeight: "bold" }}>✅ Done</span>}
-        </li>
+          {p.inactive && <span style={{ fontWeight: "bold" }}>✅</span>}
+        </div>
       );
     })}
-  </ul>
+  </div>
 </div>
 
 {/* 🌟 Admin Controls / Round Buttons */}
@@ -460,40 +465,44 @@ useEffect(() => {
       ❌ Force End
     </button>
 )}
+
+
   
-  {/* 🌈 Stylish Feedback + Round Display */}
+  {/* 🌈 Game-Style Feedback + Round Display */}
 <div
   style={{
-    padding: "12px",
-    marginBottom: "12px",
-    borderRadius: "12px",
-    background: "#f0f4f8",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-    border: "2px solid #d1d5db",
+    padding: "14px",
+    marginBottom: "16px",
+    borderRadius: "16px",
+    background: "linear-gradient(135deg, #1e293b, #0f172a)",
+    boxShadow: "0 8px 20px rgba(0,0,0,0.15)",
+    border: "2px solid #38bdf8",
+    color: "#f0f9ff",
+    fontFamily: "'Orbitron', sans-serif",
   }}
 >
   {/* 💬 Latest Feedback */}
   {latestFeedback ? (
     <div
       style={{
-        marginBottom: "10px",
-        padding: "8px 12px",
-        borderRadius: "10px",
-        fontWeight: "bold",
+        marginBottom: "12px",
+        padding: "10px 16px",
+        borderRadius: "12px",
+        fontWeight: "700",
         fontSize: "16px",
         textAlign: "center",
         color:
           latestFeedback.type === "error"
-            ? "#b91c1c"
+            ? "#f87171"
             : latestFeedback.type === "success"
-            ? "#16a34a"
-            : "#1e3a8a",
+            ? "#34d399"
+            : "#60a5fa",
         background:
           latestFeedback.type === "error"
-            ? "#fee2e2"
+            ? "#7f1d1d33"
             : latestFeedback.type === "success"
-            ? "#d1fae5"
-            : "#dbeafe",
+            ? "#16653433"
+            : "#1e40af33",
         border:
           latestFeedback.type === "error"
             ? "2px solid #f87171"
@@ -502,45 +511,30 @@ useEffect(() => {
             : "2px solid #3b82f6",
         boxShadow:
           latestFeedback.type === "error"
-            ? "0 0 8px rgba(239,68,68,0.5)"
+            ? "0 0 12px rgba(248,113,113,0.6)"
             : latestFeedback.type === "success"
-            ? "0 0 8px rgba(22,163,74,0.5)"
-            : "0 0 8px rgba(59,130,246,0.5)",
+            ? "0 0 12px rgba(52,211,153,0.6)"
+            : "0 0 12px rgba(59,130,246,0.6)",
+        textShadow: "0 0 4px rgba(0,0,0,0.3)",
         transition: "all 0.3s ease",
       }}
     >
       {latestFeedback.text || latestFeedback}
     </div>
-  ) : error ? (
-    <div
-      style={{
-        marginBottom: "10px",
-        padding: "8px 12px",
-        borderRadius: "10px",
-        fontWeight: "bold",
-        fontSize: "16px",
-        textAlign: "center",
-        color: "#b91c1c",
-        background: "#fee2e2",
-        border: "2px solid #f87171",
-        boxShadow: "0 0 8px rgba(239,68,68,0.5)",
-      }}
-    >
-      {error}
-    </div>
   ) : (
     <div
       style={{
-        marginBottom: "10px",
-        padding: "8px 12px",
-        borderRadius: "10px",
-        fontWeight: "bold",
+        marginBottom: "12px",
+        padding: "10px 16px",
+        borderRadius: "12px",
+        fontWeight: "600",
         fontSize: "16px",
         textAlign: "center",
-        color: "#6b7280",
+        color: "#94a3b8",
         fontStyle: "italic",
-        background: "#f9fafb",
-        border: "1px solid #e5e7eb",
+        background: "#33415533",
+        border: "2px dashed #64748b",
+        boxShadow: "0 0 6px rgba(100,116,139,0.3)",
       }}
     >
       No feedback yet
@@ -552,19 +546,24 @@ useEffect(() => {
     style={{
       textAlign: "center",
       fontSize: "18px",
-      fontWeight: "600",
-      padding: "10px 14px",
+      fontWeight: "700",
+      padding: "12px 16px",
       borderRadius: "12px",
-      background: roundActive ? "#e0f2fe" : "#fef3c7",
-      color: roundActive ? "#0369a1" : "#b45309",
-      border: roundActive ? "2px solid #38bdf8" : "2px solid #fbbf24",
+      background: roundActive
+        ? "linear-gradient(90deg, #38bdf8, #0ea5e9)"
+        : "linear-gradient(90deg, #facc15, #eab308)",
+      color: "#f0f9ff",
+      border: "2px solid",
+      borderColor: roundActive ? "#0ea5e9" : "#eab308",
       boxShadow: roundActive
-        ? "0 0 12px rgba(14,165,233,0.5)"
-        : "0 0 12px rgba(251,191,24,0.5)",
+        ? "0 0 16px rgba(14,165,233,0.7)"
+        : "0 0 16px rgba(251,191,24,0.7)",
+      textShadow: "0 0 6px rgba(0,0,0,0.3)",
       transition: "all 0.3s ease",
+      fontFamily: "'Orbitron', sans-serif",
     }}
   >
-    Round: {round} {roundActive ? "(active)" : "(waiting)"}
+    🏁 Round: {round} {roundActive ? "(ACTIVE)" : "(WAITING)"}
   </div>
 </div>
 
@@ -596,14 +595,15 @@ useEffect(() => {
 )}
 
 
-     {/* 🌟 Public Player List Section */}
+
+    {/* 🌟 Public Player List Section */}
 <div
   style={{
     marginTop: 16,
     marginBottom: 16,
     background: "#ffffff",
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    borderRadius: "14px",
+    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
     padding: "16px",
     border: "1px solid #e5e5e5",
   }}
@@ -613,162 +613,340 @@ useEffect(() => {
       marginTop: 0,
       marginBottom: 12,
       textAlign: "center",
-      fontSize: "18px",
-      fontWeight: "600",
-      color: "#333",
+      fontSize: "20px",
+      fontWeight: "700",
+      color: "#111827",
       letterSpacing: "0.5px",
     }}
   >
-    👥 Public Player List
+    👥 PUBLIC PLAYER's LIST 📢
   </h3>
 
   <div
     style={{
       display: "grid",
       gridTemplateColumns: "1fr 1fr",
-      gap: "8px",
+      gap: "10px",
     }}
   >
     {players.map((p) => {
       const role = rolesPublic[p.name] || "?????";
+      const isActive = activePlayer?.name === p.name;
+
+      // 🧠 Choose role emoji based on role
+      const getRoleEmoji = (r) => {
+        switch (r) {
+          case "Raja":
+            return "👑";
+          case "Rani":
+            return "👸";
+          case "PM":
+            return "🏛️";
+          case "CM":
+            return "🏢";
+          case "D-CM":
+            return "🧑‍💼";
+          case "Minister":
+            return "🎩";
+          case "MP":
+            return "📜";
+          case "MLA":
+            return "🧾";
+          case "Police":
+            return "👮";
+          case "Thief":
+            return "🕵️";
+          default:
+            return "❓";
+        }
+      };
+
       return (
         <div
           key={p.name}
           style={{
-            background: p.inactive ? "#f0fdf4" : "#f9fafb",
-            border: p.inactive ? "1px solid #86efac" : "1px solid #e5e7eb",
-            borderRadius: "8px",
-            padding: "8px 10px",
+            background: isActive
+              ? "linear-gradient(135deg, #e0f2fe, #f0f9ff)"
+              : p.inactive
+              ? "#f0fdf4"
+              : "#f9fafb",
+            border: isActive
+              ? "2px solid #3b82f6"
+              : p.inactive
+              ? "1px solid #86efac"
+              : "1px solid #e5e7eb",
+            boxShadow: isActive
+              ? "0 0 12px rgba(59,130,246,0.6)"
+              : "none",
+            borderRadius: "10px",
+            padding: "10px 12px",
             display: "flex",
             justifyContent: "space-between",
             alignItems: "center",
             fontSize: "14px",
-            fontWeight: 500,
+            fontWeight: isActive ? 700 : 500,
+            transition: "all 0.3s ease",
           }}
         >
-          <div>
-            <span style={{ color: "#111827" }}>{p.name}</span>
-            <span style={{ color: "#6b7280" }}> — {role}</span>
+          {/* Player Name */}
+          <div style={{ color: isActive ? "#1e3a8a" : "#111827" }}>
+            {p.name}
           </div>
-          {p.inactive && (
-            <span
-              style={{
-                fontSize: "14px",
-                color: "#16a34a",
-                fontWeight: "600",
-              }}
-            >
-              ✅
-            </span>
-          )}
+
+          {/* Role or Status */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "4px",
+              fontWeight: "600",
+              color: isActive ? "#1e3a8a" : "#6b7280",
+            }}
+          >
+            {isActive ? (
+              <>
+                <span>{getRoleEmoji(role)}</span>
+                <span>{role}</span>
+              </>
+            ) : (
+              p.inactive && <span>✅</span>
+            )}
+          </div>
         </div>
       );
     })}
   </div>
 </div>
 
+    {/* 🌟 Role List Section */}
+<div className="mt-4 mb-4 p-4 rounded-2xl shadow-lg bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-400 animate-pulse">
+  <h2 className="text-center text-2xl md:text-3xl font-bold text-white drop-shadow-lg mb-2">
+  </h2>
+  <RoleList className="text-white font-semibold text-lg md:text-xl" />
+</div>
 
-       {/* 🌟 Active Player + Role + Target Section */}
+{/* 🌟 Active Player + Role Section - Game Style */}
 <div
   style={{
-    marginTop: 12,
-    marginBottom: 16,
-    background: "#ffffff",
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    marginTop: "12px",
+    marginBottom: "16px",
     padding: "16px",
-    border: "1px solid #e5e5e5",
+    borderRadius: "16px",
+    background: "linear-gradient(135deg, #0f172a, #1e293b)",
+    border: "2px solid #38bdf8",
+    boxShadow:
+      "0 0 12px rgba(56, 189, 248, 0.6), 0 0 25px rgba(56, 189, 248, 0.4)",
+    textAlign: "center",
+    color: "white",
+    fontFamily: "'Orbitron', sans-serif",
+    animation: "activeGlow 2s ease-in-out infinite",
   }}
 >
   {/* 🧍 Active Player Display */}
   <div
     style={{
-      fontSize: "18px",
+      fontSize: "20px",
       fontWeight: "600",
-      color: activePlayer?.name === myName ? "#0a7cff" : "#333",
-      textAlign: "center",
-      marginBottom: "10px",
+      marginBottom: "12px",
     }}
   >
     {activePlayer ? (
       <>
-        <span>Active Player: </span>
-        <span>
+        <span> Active Player: </span>
+        <span
+          style={{
+            color: activePlayer?.name === myName ? "#38bdf8" : "#f8fafc",
+            textShadow:
+              activePlayer?.name === myName
+                ? "0 0 8px #38bdf8"
+                : "0 0 5px rgba(255,255,255,0.4)",
+          }}
+        >
           {activePlayer.name}{" "}
           {activePlayer.name === myName && (
-            <span style={{ color: "#0a7cff", fontWeight: "700" }}>
+            <span
+              style={{
+                color: "#38bdf8",
+                fontWeight: "700",
+                textShadow: "0 0 10px #38bdf8",
+              }}
+            >
               (Your Turn)
             </span>
           )}
         </span>
       </>
     ) : (
-      <span style={{ color: "#999" }}>No active player yet</span>
+      <span style={{ color: "#94a3b8" }}>No active player yet</span>
     )}
   </div>
 
-  {/* 🎭 Your Role */}
-  {myRole && (
-    <div
+{/* 🎭 Your Role - Game Style */}
+{myRole && (
+  <div
+    style={{
+      display: "inline-flex",
+      alignItems: "center",
+      gap: "12px",
+      padding: "12px 20px",
+      background: "linear-gradient(135deg, #0f172a, #1e293b)",
+      border: "2px solid #38bdf8",
+      borderRadius: "14px",
+      color: "white",
+      fontFamily: "'Orbitron', sans-serif",
+      fontSize: "20px",
+      fontWeight: "600",
+      boxShadow:
+        "0 0 12px rgba(56, 189, 248, 0.6), 0 0 25px rgba(56, 189, 248, 0.4)",
+      textAlign: "center",
+      marginBottom: "16px",
+      animation: "roleGlow 2s ease-in-out infinite",
+    }}
+  >
+    {/* 🎭 Label */}
+    <span
       style={{
-        textAlign: "center",
-        marginBottom: 12,
-        padding: "8px 12px",
-        background: "#f9f9f9",
-        border: "1px dashed #ccc",
-        borderRadius: "8px",
-        display: "inline-block",
-        fontWeight: "500",
+        fontSize: "20px",
+        letterSpacing: "1px",
+        textTransform: "uppercase",
+        color: "#38bdf8",
+        textShadow: "0 0 8px #38bdf8",
       }}
     >
-      <strong>Your Role:</strong> {myRole}
-    </div>
-  )}
+       Your Role:
+    </span>
 
-  {/* 🟠 Target Selection */}
-  {activePlayer?.name === myName && (
-    <div style={{ marginTop: 12, textAlign: "center" }}>
-      <strong style={{ display: "block", marginBottom: 8 }}>
-        Choose a Target:
-      </strong>
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          justifyContent: "center",
-          gap: "8px",
-        }}
-      >
-        {players
-          .filter((p) => p.name !== myName)
-          .map((p) => (
-            <button
-              key={p.name}
-              onClick={() => attemptCatch(p.name)}
-              style={{
-                padding: "8px 14px",
-                background: "#f0f0f0",
-                border: "1px solid #ccc",
-                borderRadius: "8px",
-                cursor: "pointer",
-                fontWeight: "500",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) =>
-                (e.currentTarget.style.background = "#e8e8e8")
-              }
-              onMouseLeave={(e) =>
-                (e.currentTarget.style.background = "#f0f0f0")
-              }
-            >
-              {p.name}
-            </button>
-          ))}
-      </div>
-    </div>
-  )}
+    {/* Icon */}
+    <span
+      style={{
+        fontSize: "28px",
+        filter: "drop-shadow(0 0 8px rgba(255, 255, 255, 0.7))",
+      }}
+    >
+      {(() => {
+        switch (myRole) {
+          case "Raja":
+            return "👑";
+          case "Rani":
+            return "👸";
+          case "PM":
+            return "🏛️";
+          case "CM":
+            return "🏢";
+          case "D-CM":
+            return "🧑‍💼";
+          case "Minister":
+            return "🎩";
+          case "MP":
+            return "📜";
+          case "MLA":
+            return "🧾";
+          case "Police":
+            return "👮";
+          case "Thief":
+            return "🕵️";
+          default:
+            return "❓";
+        }
+      })()}
+    </span>
 
-  {/* ⏳ Waiting message */}
+    {/* Role Text */}
+    <span style={{ letterSpacing: "1px", textTransform: "uppercase" }}>
+      {myRole}
+    </span>
+
+    {/* Inline keyframes */}
+    <style>
+      {`
+        @keyframes roleGlow {
+          0% {
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.6),
+                        0 0 20px rgba(56, 189, 248, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 18px rgba(56, 189, 248, 1),
+                        0 0 35px rgba(56, 189, 248, 0.7);
+          }
+          100% {
+            box-shadow: 0 0 8px rgba(56, 189, 248, 0.6),
+                        0 0 20px rgba(56, 189, 248, 0.4);
+          }
+        }
+      `}
+    </style>
+  </div>
+)}
+
+
+ {/* 🟠 Target Selection - Game Style */}
+{activePlayer?.name === myName && (
+  <div style={{ marginTop: 20, textAlign: "center" }}>
+    <h3
+      style={{
+        fontSize: "22px",
+        fontWeight: "800",
+        marginBottom: "14px",
+        color: "#e9df12ff",
+        letterSpacing: "0.5px",
+        textShadow: "0 0 10px rgba(59,130,246,0.6)",
+        fontFamily: "'Orbitron', sans-serif",
+      }}
+    >
+      🎯 Choose Your Target
+    </h3>
+
+    <div
+      style={{
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        gap: "10px",
+      }}
+    >
+      {players
+        .filter((p) => p.name !== myName)
+        .map((p, index) => (
+          <button
+            key={p.name}
+            onClick={() => attemptCatch(p.name)}
+            style={{
+              padding: "10px 16px",
+              minWidth: "120px",
+              background: "linear-gradient(135deg, #60a5fa, #3b82f6)",
+              border: "2px solid #1e40af",
+              borderRadius: "14px",
+              cursor: "pointer",
+              fontWeight: "700",
+              fontSize: "15px",
+              color: "#fff",
+              boxShadow:
+                "0 4px 10px rgba(59,130,246,0.4), inset 0 -2px 6px rgba(0,0,0,0.3)",
+              transition: "transform 0.2s ease, box-shadow 0.2s ease",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "8px",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.transform = "scale(1.08)";
+              e.currentTarget.style.boxShadow =
+                "0 6px 14px rgba(59,130,246,0.6), inset 0 -2px 6px rgba(0,0,0,0.3)";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.transform = "scale(1)";
+              e.currentTarget.style.boxShadow =
+                "0 4px 10px rgba(59,130,246,0.4), inset 0 -2px 6px rgba(0,0,0,0.3)";
+            }}
+          >
+            <span></span> {p.name}
+          </button>
+        ))}
+    </div>
+  </div>
+)}
+
+{/* ⏳ Waiting message */}
   {activePlayer?.name !== myName && (
     <div
       style={{
@@ -784,34 +962,46 @@ useEffect(() => {
 </div>
 </div>
 
-      {/* 🌟 Special Clean Scoreboard (Bottom) */}
+
+{/* 🌟 Game Style Scoreboard (Bottom) */}
 <div
   style={{
-    marginTop: 20,
+    marginTop: 24,
     padding: "16px",
-    background: "#ffffff",
-    borderRadius: "12px",
-    boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+    background: "linear-gradient(135deg, #0f172a, #1e293b)",
+    borderRadius: "16px",
+    boxShadow: "0 4px 20px rgba(0,0,0,0.4)",
     textAlign: "center",
-    border: "1px solid #e5e5e5",
+    border: "2px solid #38bdf8",
+    fontFamily: "'Orbitron', sans-serif",
   }}
 >
   <h2
     style={{
-      fontSize: "20px",
-      fontWeight: "600",
-      marginBottom: "12px",
-      letterSpacing: "0.5px",
-      color: "#333",
-      borderBottom: "2px solid #ddd",
+      fontSize: "22px",
+      fontWeight: "700",
+      marginBottom: "14px",
+      letterSpacing: "1px",
+      color: "#38bdf8",
+      textTransform: "uppercase",
+      textShadow: "0 0 12px rgba(56,189,248,0.8)",
       display: "inline-block",
       paddingBottom: "4px",
+      borderBottom: "2px solid #38bdf8",
     }}
   >
-    Scoreboard
+    🏆 Scoreboard
   </h2>
 
-  <div style={{ maxWidth: 400, margin: "0 auto" }}>
+  <div
+    style={{
+      display: "flex",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: "12px",
+      marginTop: "10px",
+    }}
+  >
     {players
       .slice()
       .sort((a, b) => (b.score || 0) - (a.score || 0))
@@ -822,20 +1012,36 @@ useEffect(() => {
             key={p.name}
             style={{
               display: "flex",
-              justifyContent: "space-between",
               alignItems: "center",
-              padding: "8px 12px",
-              marginBottom: "6px",
-              borderRadius: "8px",
-              background: isYou ? "#f0f9ff" : "#f9f9f9",
-              border: "1px solid #eee",
-              fontWeight: isYou ? "600" : "400",
-              color: isYou ? "#0056b3" : "#444",
-              transition: "background 0.3s",
+              justifyContent: "space-between",
+              minWidth: "180px",
+              background: isYou
+                ? "linear-gradient(135deg, #1e40af, #2563eb)"
+                : "linear-gradient(135deg, #1e293b, #334155)",
+              padding: "10px 14px",
+              borderRadius: "12px",
+              color: isYou ? "#fff" : "#e2e8f0",
+              fontWeight: isYou ? "700" : "500",
+              border: isYou ? "2px solid #facc15" : "1px solid #475569",
+              boxShadow: isYou
+                ? "0 0 15px rgba(250,204,21,0.7)"
+                : "0 0 8px rgba(56,189,248,0.4)",
+              transform: isYou ? "scale(1.05)" : "scale(1)",
+              transition: "all 0.3s ease",
             }}
           >
-            <span>{index + 1}. {p.name} {isYou && "(You)"}</span>
-            <span>{p.score || 0} pts</span>
+            <span style={{ fontSize: "15px", textAlign: "left" }}>
+              #{index + 1} {p.name} {isYou && "⭐"}
+            </span>
+            <span
+              style={{
+                fontSize: "16px",
+                fontWeight: "700",
+                marginLeft: "8px",
+              }}
+            >
+              {p.score || 0}
+            </span>
           </div>
         );
       })}
@@ -843,45 +1049,100 @@ useEffect(() => {
 </div>
 
     
-     <div style={{ marginBottom: 12 }}>
-  <h3>Feedback</h3>
+    {/* 📝 Game Feedback Section */}
+<div
+  style={{
+    marginBottom: "16px",
+    textAlign: "center",
+    fontFamily: "'Orbitron', sans-serif",
+  }}
+>
+  <h3
+    style={{
+      fontSize: "22px",
+      fontWeight: "700",
+      color: "#061a1bff",
+      textShadow: "0 0 10px rgba(3, 73, 103, 0.8)",
+      marginBottom: "10px",
+      letterSpacing: "1px",
+    }}
+  >
+    💬🔙FEED
+  </h3>
 
   <div
     style={{
-      maxHeight: 80,
-      minHeight: 50,
+      maxHeight: 90,
+      minHeight: 60,
       display: "flex",
       alignItems: "center",
       justifyContent: "center",
-      background: "#fafafa",
-      padding: 8,
-      border: "1px solid #eee",
-      fontWeight: "bold",
-      fontSize: "16px",
+      background: "linear-gradient(135deg, #0f172a, #1e293b)",
+      border: "2px solid #38bdf8",
+      borderRadius: "14px",
+      padding: "10px 16px",
+      boxShadow:
+        "0 0 15px rgba(56, 189, 248, 0.5), 0 0 30px rgba(56, 189, 248, 0.3)",
       textAlign: "center",
+      animation: "feedbackGlow 2s ease-in-out infinite",
     }}
   >
     {latestFeedback ? (
       <div
-        className={`new-log ${latestFeedback.type || "neutral"}`}
         style={{
+          fontSize: "18px",
+          fontWeight: "600",
           color:
             latestFeedback.type === "error"
-              ? "red"
+              ? "#ef4444"
               : latestFeedback.type === "success"
-              ? "green"
-              : "black",
+              ? "#22c55e"
+              : "#e5e7eb",
+          textShadow:
+            latestFeedback.type === "error"
+              ? "0 0 10px rgba(239,68,68,0.8)"
+              : latestFeedback.type === "success"
+              ? "0 0 10px rgba(34,197,94,0.8)"
+              : "0 0 8px rgba(229,231,235,0.6)",
+          letterSpacing: "0.8px",
         }}
       >
         {latestFeedback.text || latestFeedback}
       </div>
     ) : (
-      <span style={{ color: "#999", fontStyle: "italic" }}>
+      <span
+        style={{
+          color: "#94a3b8",
+          fontStyle: "italic",
+          fontSize: "16px",
+        }}
+      >
         No feedback yet
       </span>
     )}
   </div>
+
+  {/* ✨ Inline Keyframes */}
+  <style>
+    {`
+      @keyframes feedbackGlow {
+        0% {
+          box-shadow: 0 0 10px rgba(56, 189, 248, 0.4),
+                      0 0 25px rgba(56, 189, 248, 0.2);
+        }
+        50% {
+          box-shadow: 0 0 20px rgba(56, 189, 248, 0.8),
+                      0 0 40px rgba(56, 189, 248, 0.5);
+        }
+        100% {
+          box-shadow: 0 0 10px rgba(56, 189, 248, 0.4),
+                      0 0 25px rgba(56, 189, 248, 0.2);
+        }
+      }
+    `}
+  </style>
 </div>
+
     
    {/* 🏆 Special Scoreboard Popup after round ends */}
 {showScoreboardPopup && (
@@ -990,4 +1251,5 @@ useEffect(() => {
   </div>
  );
 }
+
 

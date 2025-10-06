@@ -2,17 +2,21 @@
 import React, { createContext, useEffect, useState } from "react";
 import { io } from "socket.io-client";
 
-// CHANGE THIS URL to your online backend URL
-const BACKEND_URL = "https://raja-rani-backend-cmbr.onrender.com";
 export const SocketContext = createContext();
 
-export const SocketProvider = ({ children }) => {
+export const SocketProvider = ({ children, backendUrl }) => {
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const s = io(BACKEND_URL, {
+    if (!backendUrl) return;
+
+    const s = io(backendUrl, {
       transports: ["websocket"],
+      autoConnect: true,
+      reconnection: true,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 1000,
     });
 
     s.on("connect", () => {
@@ -20,8 +24,13 @@ export const SocketProvider = ({ children }) => {
       setConnected(true);
     });
 
-    s.on("disconnect", () => {
-      console.log("❌ Disconnected from backend");
+    s.on("disconnect", (reason) => {
+      console.log("❌ Disconnected from backend:", reason);
+      setConnected(false);
+    });
+
+    s.on("connect_error", (err) => {
+      console.warn("⚠ Socket connection error:", err.message);
       setConnected(false);
     });
 
@@ -30,7 +39,7 @@ export const SocketProvider = ({ children }) => {
     return () => {
       s.disconnect();
     };
-  }, []);
+  }, [backendUrl]);
 
   return (
     <SocketContext.Provider value={{ socket, connected }}>
