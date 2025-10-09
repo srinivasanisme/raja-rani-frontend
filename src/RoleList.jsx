@@ -45,42 +45,54 @@ export default function RoleList() {
   };
 
   return (
-    <div className="text-center mt-10">
-      {/* 🌟 Neon Arcade Button */}
+    <div className="text-center mt-6 md:mt-10">
+      {/* 🌟 Toggle Button */}
       <button
-        onClick={() => setShowRoles(!showRoles)}
-        className="w-fit px-8 py-3 rounded-3xl 
-                   bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-400
-                   text-white font-extrabold text-lg
-                   shadow-[0_0_20px_rgba(255,0,255,0.7),0_0_40px_rgba(255,0,255,0.5)]
-                   hover:scale-110 hover:shadow-[0_0_30px_rgba(255,0,255,0.9),0_0_50px_rgba(255,0,255,0.7)]
-                   transition-all duration-300 animate-pulse"
-      >
-        {showRoles ? "Hide Roles" : "View Roles"}
-      </button>
+  onClick={() => setShowRoles(!showRoles)}
+  className="px-6 py-2 rounded-xl 
+             bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500
+             text-white font-bold text-sm md:text-base
+             shadow-[0_0_15px_rgba(147,51,234,0.8),0_0_30px_rgba(236,72,153,0.6)]
+             hover:scale-110 hover:shadow-[0_0_25px_rgba(236,72,153,0.9)]
+             transition-all duration-300 tracking-wide"
+>
+  {showRoles ? "✖ Hide Roles" : "🎭 View Roles"}
+</button>
 
-      {/* 🎮 Role Cards Grid */}
+      {/* 🎮 Role Panel */}
       {showRoles && (
-        <div className="mt-8 grid grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-          {roles.map((role, index) => (
-            <div
-              key={role.name}
-              className={`bg-gradient-to-br ${
-                index % 2 === 0
-                  ? "from-blue-500 via-purple-500 to-pink-500"
-                  : "from-green-400 via-yellow-400 to-orange-400"
-              } text-white p-5 rounded-2xl shadow-2xl 
-                 shadow-pink-400/50 flex flex-col items-center 
-                 w-36 transform hover:scale-110 transition-transform duration-300`}
-            >
-              {/* ✨ Emoji Bounce */}
-              <span className="text-5xl animate-bounce">{getEmoji(role.name)}</span>
-              {/* 🏷️ Role Name */}
-              <span className="font-extrabold mt-3 text-lg drop-shadow-lg">{role.name}</span>
-              {/* 💰 Points */}
-              <span className="text-yellow-300 font-bold mt-1 text-lg">{role.points}</span>
-            </div>
-          ))}
+        <div
+          className="mt-5 mx-auto max-w-2xl p-4 rounded-2xl 
+                     bg-[#0b0f1a]/80 backdrop-blur-sm 
+                     border border-purple-500/50 
+                     shadow-[0_0_20px_rgba(147,51,234,0.4),0_0_40px_rgba(236,72,153,0.3)]"
+        >
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 justify-items-center">
+            {roles.map((role, index) => (
+              <div
+                key={role.name}
+                className={`relative px-3 py-2 rounded-xl 
+                           bg-gradient-to-br from-[#1e2230] to-[#0b0f1a]
+                           border ${
+                             index % 2 === 0
+                               ? "border-pink-400/60"
+                               : "border-purple-400/60"
+                           }
+                           shadow-[0_0_8px_rgba(236,72,153,0.6)]
+                           text-white flex items-center gap-1 w-full max-w-[150px]
+                           hover:scale-105 hover:shadow-[0_0_15px_rgba(236,72,153,0.9)]
+                           transition-transform duration-300`}
+              >
+                <span className="text-base md:text-xl">{getEmoji(role.name)}</span>
+                <span className="text-[12px] md:text-sm font-bold truncate">
+                  {role.name}
+                </span>
+                <span className="ml-auto text-yellow-300 text-[11px] md:text-sm font-semibold">
+                  {role.points}
+                </span>
+              </div>
+            ))}
+          </div>
         </div>
       )}
     </div>
