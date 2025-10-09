@@ -1210,6 +1210,6 @@ useEffect(() => {
   </div>
 )}
 
- </div>
+</div>
  );
 }
