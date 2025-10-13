@@ -4,7 +4,7 @@ import { SocketProvider, SocketContext } from "./SocketContext.jsx";
 import RajaRaniGame from "./RajaRaniGame";
 import GameIntro from "./GameIntro";
 
-const BACKEND_URL = "https://raja-rani-backend-cmbr.onrender.com";
+const BACKEND_URL = "http://localhost:4000";
 
 function AppContent() {
   const { connected } = useContext(SocketContext);

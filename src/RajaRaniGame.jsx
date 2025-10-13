@@ -28,6 +28,9 @@ export default function RajaRaniGame({ onExit }) {
   const [adminName, setAdminName] = useState(null);
   const [turnInterval, setTurnInterval] = useState(null);
   const [showScoreboardPopup, setShowScoreboardPopup] = useState(false);
+  const [feedback, setFeedback] = useState("");        // input value
+  const [feedbackList, setFeedbackList] = useState([]); // all feedback
+  const [open, setOpen] = useState(false);
   // ---------------- SOCKET EFFECT ----------------
 useEffect(() => {
   if (!socket) return;
@@ -141,6 +144,20 @@ useEffect(() => {
   };
 }, [socket]);
 
+    useEffect(() => {
+  if (!socket) return;
+
+  const handleNewFeedback = (msg) => {
+    setFeedbackList((prev) => [...prev, msg]);
+  };
+
+  socket.on("newFeedback", handleNewFeedback);
+
+  return () => {
+    socket.off("newFeedback", handleNewFeedback);
+  };
+}, [socket]);
+
 
     useEffect(() => {
       if (history.length > 0) {
@@ -224,6 +241,12 @@ useEffect(() => {
     });
   };
 
+
+  const sendFeedback = () => {
+  if (!feedback.trim()) return;
+  socket.emit("sendFeedback", { player: myName, text: feedback });
+  setFeedback(""); // clear input locally
+};
  
 
   return (
@@ -250,7 +273,7 @@ useEffect(() => {
   {/* Extra glowing effect */}
   <div className="absolute inset-0 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 opacity-10 animate-animate-glow pointer-events-none"></div>
 </div>
-
+ 
 
 
 
@@ -332,7 +355,8 @@ useEffect(() => {
 
 <div
   style={{
-    marginBottom: 12,
+    position: "relative", // Needed for absolute positioning of round
+    marginBottom: "20px",
     padding: "10px 12px",
     background: "#0f172a",
     borderRadius: "12px",
@@ -341,19 +365,47 @@ useEffect(() => {
     color: "#fff",
   }}
 >
-  <strong
+  {/* ⬆ Round Display Badge */}
+  <div
     style={{
+      position: "absolute",
+      top: "-14px",
+      left: "50%",
+      transform: "translateX(-50%)",
       fontSize: "14px",
-      marginBottom: "8px",
-      display: "block",
-      letterSpacing: "0.5px",
-      textTransform: "uppercase",
-      color: "#38bdf8",
+      fontWeight: "700",
+      padding: "6px 10px",
+      borderRadius: "10px",
+      background: roundActive
+        ? "linear-gradient(90deg, #38bdf8, #0ea5e9)"
+        : "linear-gradient(90deg, #facc15, #eab308)",
+      color: "#f0f9ff",
+      border: "2px solid",
+      borderColor: roundActive ? "#0ea5e9" : "#eab308",
+      boxShadow: roundActive
+        ? "0 0 10px rgba(14,165,233,0.6)"
+        : "0 0 10px rgba(251,191,24,0.6)",
       textAlign: "center",
+      whiteSpace: "nowrap",
     }}
   >
-    💥 Players ({players.length}/10)
-  </strong>
+    🏁 Round: {round} {roundActive ? "(ACTIVE)" : "(WAITING)"}
+  </div>
+
+  <strong
+  style={{
+    fontSize: "14px",
+    marginBottom: "8px",
+    display: "block",
+    letterSpacing: "0.5px",
+    textTransform: "uppercase",
+    color: "#38bdf8",
+    textAlign: "left",      // <-- Changed from center
+    paddingLeft: "8px",     // <-- Optional, adds a bit of margin from left edge
+  }}
+>
+  💥 Players ({players.length}/10)
+</strong>
 
   <div
     style={{
@@ -410,180 +462,135 @@ useEffect(() => {
 </div>
 
 
-{/* 🌟 Admin Controls / Round Buttons - Mobile Friendly */}
+{/* 💬 Feedback Line — Centered, single line, full-width if needed */}
+<div
+  style={{
+    display: "block",
+    maxWidth: "100%",         // allow full width on web
+    minWidth: "200px",        // optional: don't shrink too small
+    margin: "10px auto",      // center horizontally
+    padding: "8px 16px",
+    textAlign: "center",
+    fontFamily: "'Orbitron', sans-serif",
+    fontSize: "14px",
+    fontWeight: "700",
+    borderRadius: "8px",
+    background: latestFeedback
+      ? latestFeedback.type === "error"
+        ? "#7f1d1d"
+        : latestFeedback.type === "success"
+        ? "#14532d"
+        : "#1e3a8a"
+      : "#0f172a",
+    color: "#f1f5f9",
+    border: latestFeedback
+      ? latestFeedback.type === "error"
+        ? "2px solid #ef4444"
+        : latestFeedback.type === "success"
+        ? "2px solid #22c55e"
+        : "2px solid #3b82f6"
+      : "2px dashed #64748b",
+    boxShadow:
+      latestFeedback?.type === "error"
+        ? "0 0 8px #ef4444"
+        : latestFeedback?.type === "success"
+        ? "0 0 8px #22c55e"
+        : "0 0 8px #3b82f6",
+    whiteSpace: "nowrap",     // keep single line
+    overflow: "hidden",
+    textOverflow: "ellipsis", // show '...' if text too long
+  }}
+>
+  {latestFeedback ? latestFeedback.text || latestFeedback : "No feedback yet"}
+</div>
+
+
+
+
+{/* 🌟 Admin Controls + Timer + Active Player */}
 <div
   style={{
     display: "flex",
-    flexWrap: "wrap",
-    justifyContent: "center",
-    gap: "8px",
-    marginBottom: "14px",
+    flexDirection: "column",
+    alignItems: "center",
+    gap: "12px",
+    fontFamily: "'Orbitron', sans-serif",
+    maxWidth: "360px",
+    margin: "0 auto",
   }}
 >
-  {/* ▶ Start Round */}
-  {isAdmin && !roundActive && (
-    <button
-      onClick={startRound}
-      style={{
-        flex: "1 1 auto",
-        minWidth: "120px",
-        maxWidth: "180px",
-        padding: "8px 12px",
-        fontSize: "14px",
-        fontWeight: "600",
-        borderRadius: "10px",
-        border: "none",
-        cursor: "pointer",
-        background: "linear-gradient(90deg, #3b82f6, #06b6d4)",
-        color: "#fff",
-        boxShadow: "0 3px 10px rgba(59,130,246,0.4)",
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.boxShadow = "0 4px 14px rgba(59,130,246,0.6)")
-      }
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.boxShadow = "0 3px 10px rgba(59,130,246,0.4)")
-      }
-    >
-      ▶ Start Round
-    </button>
-  )}
-
-  {/* ❌ Force End */}
-  {isAdmin && roundActive && (
-    <button
-      onClick={forceEnd}
-      style={{
-        flex: "1 1 auto",
-        minWidth: "120px",
-        maxWidth: "180px",
-        padding: "8px 12px",
-        fontSize: "14px",
-        fontWeight: "600",
-        borderRadius: "10px",
-        border: "none",
-        cursor: "pointer",
-        background: "linear-gradient(90deg, #ef4444, #f97316)",
-        color: "#fff",
-        boxShadow: "0 3px 10px rgba(239,68,68,0.4)",
-        transition: "all 0.2s ease",
-      }}
-      onMouseEnter={(e) =>
-        (e.currentTarget.style.boxShadow = "0 4px 14px rgba(239,68,68,0.6)")
-      }
-      onMouseLeave={(e) =>
-        (e.currentTarget.style.boxShadow = "0 3px 10px rgba(239,68,68,0.4)")
-      }
-    >
-      ❌ Force End
-    </button>
-  )}
-
-
-
-  
-  {/* 🌈 Compact Mobile-Friendly Game HUD */}
-<div style={{ padding: "8px", fontFamily: "'Orbitron', sans-serif" }}>
-  {/* 💬 Feedback + Round + Timer */}
-  <div
-    style={{
-      padding: "8px",
-      borderRadius: "12px",
-      background: "linear-gradient(135deg, #1e293b, #0f172a)",
-      boxShadow: "0 6px 12px rgba(0,0,0,0.2)",
-      border: "2px solid #38bdf8",
-      color: "#f0f9ff",
-      marginBottom: "12px",
-      textAlign: "center",
-    }}
-  >
-    {/* Latest Feedback */}
-    {latestFeedback ? (
-      <div
-        style={{
-          marginBottom: "8px",
-          padding: "6px 10px",
-          borderRadius: "10px",
-          fontWeight: "700",
-          fontSize: "13px",
-          color:
-            latestFeedback.type === "error"
-              ? "#f87171"
-              : latestFeedback.type === "success"
-              ? "#34d399"
-              : "#60a5fa",
-          background:
-            latestFeedback.type === "error"
-              ? "#7f1d1d33"
-              : latestFeedback.type === "success"
-              ? "#16653433"
-              : "#1e40af33",
-          border:
-            latestFeedback.type === "error"
-              ? "2px solid #f87171"
-              : latestFeedback.type === "success"
-              ? "2px solid #34d399"
-              : "2px solid #3b82f6",
-          boxShadow:
-            latestFeedback.type === "error"
-              ? "0 0 6px rgba(248,113,113,0.5)"
-              : latestFeedback.type === "success"
-              ? "0 0 6px rgba(52,211,153,0.5)"
-              : "0 0 6px rgba(59,130,246,0.5)",
-          textShadow: "0 0 2px rgba(0,0,0,0.2)",
-        }}
-      >
-        {latestFeedback.text || latestFeedback}
-      </div>
-    ) : (
-      <div
-        style={{
-          marginBottom: "8px",
-          padding: "6px 10px",
-          borderRadius: "10px",
-          fontWeight: "600",
-          fontSize: "13px",
-          fontStyle: "italic",
-          color: "#94a3b8",
-          background: "#33415533",
-          border: "2px dashed #64748b",
-          boxShadow: "0 0 4px rgba(100,116,139,0.3)",
-        }}
-      >
-        No feedback yet
-      </div>
-    )}
-
-    {/* Round Display */}
+  {/* 🔹 Admin Buttons */}
+  {isAdmin && (
     <div
       style={{
-        marginBottom: "6px",
-        fontSize: "14px",
-        fontWeight: "700",
-        padding: "6px 10px",
-        borderRadius: "10px",
-        background: roundActive
-          ? "linear-gradient(90deg, #38bdf8, #0ea5e9)"
-          : "linear-gradient(90deg, #facc15, #eab308)",
-        color: "#f0f9ff",
-        border: "2px solid",
-        borderColor: roundActive ? "#0ea5e9" : "#eab308",
-        boxShadow: roundActive
-          ? "0 0 10px rgba(14,165,233,0.6)"
-          : "0 0 10px rgba(251,191,24,0.6)",
+        display: "flex",
+        flexWrap: "wrap",
+        justifyContent: "center",
+        gap: "8px",
+        width: "100%",
       }}
     >
-      🏁 Round: {round} {roundActive ? "(ACTIVE)" : "(WAITING)"}
+      {!roundActive && (
+        <button
+          onClick={startRound}
+          style={{
+            flex: "1 1 120px",
+            padding: "8px 12px",
+            fontSize: "14px",
+            fontWeight: "600",
+            borderRadius: "10px",
+            border: "none",
+            cursor: "pointer",
+            background: "linear-gradient(90deg, #3b82f6, #06b6d4)",
+            color: "#fff",
+            boxShadow: "0 3px 10px rgba(59,130,246,0.4)",
+            transition: "all 0.2s ease",
+          }}
+        >
+          ▶ Start Round
+        </button>
+      )}
+      {roundActive && (
+        <button
+          onClick={forceEnd}
+          style={{
+            flex: "1 1 120px",
+            padding: "8px 12px",
+            fontSize: "14px",
+            fontWeight: "600",
+            borderRadius: "10px",
+            border: "none",
+            cursor: "pointer",
+            background: "linear-gradient(90deg, #ef4444, #f97316)",
+            color: "#fff",
+            boxShadow: "0 3px 10px rgba(239,68,68,0.4)",
+            transition: "all 0.2s ease",
+          }}
+        >
+          ❌ Force End
+        </button>
+      )}
     </div>
+  )}
 
+
+   {/* Timer + Active Player — Side by side */}
+  <div
+    style={{
+      display: "flex",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+      gap: "8px",
+      flexWrap: "wrap",
+    }}
+  >
     {/* Timer */}
     {turnTimeLeft > 0 && activePlayer?.name?.trim() === myName.trim() && (
       <div
         style={{
-          marginTop: "4px",
-          display: "inline-block",
-          padding: "6px 10px",
+          flex: "1 1 45%",
+          textAlign: "center",
+          padding: "6px 8px",
           fontSize: "14px",
           fontWeight: "700",
           color: turnTimeLeft <= 5 ? "#b91c1c" : "#1e3a8a",
@@ -594,135 +601,139 @@ useEffect(() => {
             turnTimeLeft <= 5
               ? "0 0 6px rgba(239,68,68,0.7)"
               : "0 0 5px rgba(99,102,241,0.5)",
-          textAlign: "center",
           animation: turnTimeLeft <= 5 ? "pulse 1s infinite" : "none",
         }}
       >
         🕒 Your turn: {Math.ceil(turnTimeLeft)}s
       </div>
     )}
-  </div>
+ </div>
 
-  {/* 👥 Compact Public Player List */}
-  <div
-    style={{
-      background: "#ffffff",
-      borderRadius: "12px",
-      boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
-      padding: "10px",
-      border: "1px solid #e5e5e5",
-    }}
-  >
-    <h3
-      style={{
-        marginTop: 0,
-        marginBottom: 10,
-        textAlign: "center",
-        fontSize: "16px",
-        fontWeight: "700",
-        color: "#111827",
-      }}
-    >
-      👥 PUBLIC PLAYERS
-    </h3>
-
+{/* 🎮 Active Player + Role List — Unified Game Panel */}
+<div
+  style={{
+    maxWidth: "360px",
+    margin: "16px auto",
+    padding: "12px",
+    borderRadius: "12px",
+    background: "linear-gradient(145deg, #0f172a, #1e293b)",
+    border: "2px solid #38bdf8",
+    boxShadow: "0 0 15px rgba(56,189,248,0.5)",
+    textAlign: "center",
+    fontFamily: "'Orbitron', sans-serif",
+  }}
+>
+  {/* Active Player */}
+  {activePlayer && (
     <div
       style={{
-        display: "grid",
-        gridTemplateColumns: "1fr 1fr",
-        gap: "6px",
+        marginBottom: "12px",
       }}
     >
-      {players.map((p) => {
-        const role = rolesPublic[p.name] || "?????";
-        const isActive = activePlayer?.name === p.name;
+      <h3
+        style={{
+          margin: 0,
+          fontSize: "15px",
+          fontWeight: "900",
+          letterSpacing: "1px",
+          textTransform: "uppercase",
+          color: "#f1f5f9",
+          textShadow: "0 0 4px #64748b",
+          marginBottom: "8px",
+        }}
+      >
+  <span style={{ fontSize: "24px" }}>🎮</span>Active Player
+      </h3>
 
-        const getRoleEmoji = (r) => {
-          switch (r) {
-            case "Raja":
-              return "👑";
-            case "Rani":
-              return "👸";
-            case "PM":
-              return "🏛️";
-            case "CM":
-              return "🏢";
-            case "D-CM":
-              return "🧑‍💼";
-            case "Minister":
-              return "🎩";
-            case "MP":
-              return "📜";
-            case "MLA":
-              return "🧾";
-            case "Police":
-              return "👮";
-            case "Thief":
-              return "🕵️";
-            default:
-              return "❓";
-          }
-        };
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "8px",
+        }}
+      >
+        {/* Emoji */}
+        <div
+          style={{
+            background: "rgba(255,255,255,0.05)",
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            fontSize: "22px",
+            boxShadow: "0 0 8px #38bdf8",
+          }}
+        >
+          {(() => {
+            const role = rolesPublic[activePlayer.name] || "?????";
+            switch (role) {
+              case "Raja": return "👑";
+              case "Rani": return "👸";
+              case "PM": return "🏛️";
+              case "CM": return "🏢";
+              case "D-CM": return "🧑‍💼";
+              case "Minister": return "🎩";
+              case "MP": return "📜";
+              case "MLA": return "🧾";
+              case "Police": return "👮";
+              case "Thief": return "🕵️";
+              default: return "👻";
+            }
+          })()}
+        </div>
 
-        return (
+        {/* Name + Role */}
+        <div style={{ textAlign: "left" }}>
           <div
-            key={p.name}
             style={{
-              background: isActive
-                ? "linear-gradient(135deg, #e0f2fe, #f0f9ff)"
-                : p.inactive
-                ? "#f0fdf4"
-                : "#f9fafb",
-              border: isActive
-                ? "2px solid #3b82f6"
-                : p.inactive
-                ? "1px solid #86efac"
-                : "1px solid #e5e7eb",
-              boxShadow: isActive ? "0 0 10px rgba(59,130,246,0.5)" : "none",
-              borderRadius: "8px",
-              padding: "6px 8px",
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
               fontSize: "13px",
-              fontWeight: isActive ? 700 : 500,
+              fontWeight: "700",
+              color: "#f1f5f9",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
             }}
           >
-            <div style={{ color: isActive ? "#1e3a8a" : "#111827" }}>
-              {p.name}
-            </div>
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "4px",
-                fontWeight: "600",
-                color: isActive ? "#1e3a8a" : "#6b7280",
-              }}
-            >
-              {isActive ? (
-                <>
-                  <span>{getRoleEmoji(role)}</span>
-                  <span>{role}</span>
-                </>
-              ) : (
-                p.inactive && <span>✅</span>
-              )}
-            </div>
+            {activePlayer.name}
           </div>
-        );
-      })}
+          <div
+            style={{
+              fontSize: "11px",
+              color: "#94a3b8",
+              whiteSpace: "nowrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            }}
+          >
+            {rolesPublic[activePlayer.name] || "?????"}
+          </div>
+        </div>
+      </div>
     </div>
+  )}
+
+  {/* Role List */}
+  <div
+    style={{
+      paddingTop: "8px",
+      borderTop: "1px solid rgba(56,189,248,0.3)",
+      display: "flex",
+      flexWrap: "wrap",
+      justifyContent: "center",
+      gap: "8px",
+      color: "#f1f5f9",
+      fontWeight: "600",
+      fontSize: "14px",
+    }}
+  >
+    <RoleList />
   </div>
 </div>
-
-
-    {/* 🌟 Role List Section */}
-<div className="mt-4 mb-4 p-4 rounded-2xl shadow-lg bg-gradient-to-r from-purple-500 via-pink-500 to-yellow-400 animate-pulse">
-  <h2 className="text-center text-2xl md:text-3xl font-bold text-white drop-shadow-lg mb-2">
-  </h2>
-  <RoleList className="text-white font-semibold text-lg md:text-xl" />
 </div>
+
 
 {/* 🌟 Compact Active Player + Role Section - Mobile Friendly */}
 <div
@@ -741,51 +752,6 @@ useEffect(() => {
     animation: "activeGlow 2s ease-in-out infinite",
   }}
 >
-  {/* 🧍 Active Player Display */}
-  <div
-    style={{
-      fontSize: "15px",
-      fontWeight: "600",
-      marginBottom: "8px",
-      wordWrap: "break-word",
-    }}
-  >
-    {activePlayer ? (
-      <>
-        <span>Active Player: </span>
-        <span
-          style={{
-            color: activePlayer?.name === myName ? "#38bdf8" : "#f8fafc",
-            textShadow:
-              activePlayer?.name === myName
-                ? "0 0 6px #38bdf8"
-                : "0 0 4px rgba(255,255,255,0.4)",
-            fontSize: "15px",
-            fontWeight: "700",
-          }}
-        >
-          {activePlayer.name}
-          {activePlayer.name === myName && (
-            <span
-              style={{
-                display: "block",
-                fontSize: "13px",
-                color: "#38bdf8",
-                fontWeight: "700",
-                textShadow: "0 0 8px #38bdf8",
-                marginTop: "2px",
-              }}
-            >
-              (Your Turn)
-            </span>
-          )}
-        </span>
-      </>
-    ) : (
-      <span style={{ color: "#94a3b8" }}>No active player yet</span>
-    )}
-  </div>
-
   {/* 🎭 Your Role - Compact Style */}
   {myRole && (
     <div
@@ -899,7 +865,7 @@ useEffect(() => {
   )}
 
 
-{/* 🟠 Target Selection - Ultra Compact Horizontal Scroll Version */}
+{/* 🟠 Target Selection - Centered Horizontal Scroll */}
 {activePlayer?.name === myName && (
   <div style={{ marginTop: 14, textAlign: "center" }}>
     <h3
@@ -919,6 +885,7 @@ useEffect(() => {
     <div
       style={{
         display: "flex",
+        justifyContent: "center", // Center horizontally
         overflowX: "auto",
         gap: "6px",
         padding: "4px",
@@ -976,6 +943,7 @@ useEffect(() => {
 
 
 
+
 {/* ⏳ Waiting message */}
   {activePlayer?.name !== myName && (
     <div
@@ -990,7 +958,30 @@ useEffect(() => {
     </div>
   )}
 </div>
+
+
+<div className="chat-floating">
+  <div className="chat-header">💬 Chat</div>
+  <div className="chat-messages">
+    {feedbackList.map((f, idx) => (
+      <div key={idx} className="chat-message">
+        <span className="player-name">{f.player}:</span> {f.text}
+      </div>
+    ))}
+  </div>
+  <div className="chat-input">
+    <input
+      type="text"
+      placeholder="Type..."
+      value={feedback}
+      onChange={(e) => setFeedback(e.target.value)}
+      onKeyDown={(e) => e.key === "Enter" && sendFeedback()}
+    />
+    <button onClick={sendFeedback}>➤</button>
+  </div>
 </div>
+
+
 
 
 {/* 🌟 Ultra-Compact Mobile Scoreboard */}
@@ -1090,7 +1081,6 @@ useEffect(() => {
       })}
   </div>
 </div>
-
 
 
     

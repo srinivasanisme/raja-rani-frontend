@@ -1,26 +1,34 @@
 // src/SocketContext.jsx
-import React, { createContext, useEffect, useState } from "react";
-import io from "socket.io-client";
+import { createContext, useEffect, useState } from "react";
+import { io } from "socket.io-client";
 
 export const SocketContext = createContext();
 
-export function SocketProvider({ children }) {
+export function SocketProvider({ children, backendUrl }) {
   const [socket, setSocket] = useState(null);
   const [connected, setConnected] = useState(false);
 
   useEffect(() => {
-    const s = io("https://raja-rani-backend-cmbr.onrender.com", {
+    const newSocket = io(backendUrl, {
       transports: ["websocket"],
     });
 
-    setSocket(s);
+    setSocket(newSocket);
 
-    s.on("connect", () => setConnected(true));
-    s.on("disconnect", () => setConnected(false));
-    s.on("connect_error", () => setConnected(false));
+    newSocket.on("connect", () => {
+      setConnected(true);
+      console.log("✅ Connected to backend:", backendUrl);
+    });
 
-    return () => s.disconnect();
-  }, []);
+    newSocket.on("disconnect", () => {
+      setConnected(false);
+      console.log("❌ Disconnected from backend");
+    });
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [backendUrl]);
 
   return (
     <SocketContext.Provider value={{ socket, connected }}>
